@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>VIONA - Payroll Intelligence System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --aha-blue-dark: #1d388b;
+            --aha-blue-main: #325fec;
+            --aha-blue-light: #96adf5;
+            --aha-purple: #6d50b8;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--aha-blue-dark) 0%, var(--aha-blue-main) 60%, var(--aha-blue-light) 100%);
+            min-height: 100vh; margin: 0; padding: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* --- LAYAR LOGIN --- */
+        #login-screen {
+            display: block; /* Pastikan muncul di awal */
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            padding: 50px; border-radius: 30px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            text-align: center; width: 380px;
+        }
+        .viona-logo-login { font-size: 48px; font-weight: 900; background: linear-gradient(to right, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -2px; }
+        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; }
+        .btn-login { width: 100%; padding: 15px; background: var(--aha-blue-dark); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-login:hover { background: var(--aha-blue-main); transform: scale(1.02); }
+
+        /* --- SISTEM UTAMA --- */
+        #main-system { display: none; padding: 40px; width: 100%; box-sizing: border-box; }
+        .viona-card { background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(10px); max-width: 1150px; margin: auto; border-radius: 30px; padding: 40px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
+        .viona-logo-main { font-size: 48px; font-weight: 900; background: linear-gradient(to right, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; letter-spacing: -2px; }
+        .admin-box { background: var(--white); border: 1px solid #e2e8f0; padding: 10px 20px; border-radius: 15px; text-align: right; }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+        th { padding: 15px; color: #475569; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-align: left; }
+        td { background: white; padding: 15px; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+        tr td:first-child { border-left: 1px solid #f1f5f9; border-radius: 15px 0 0 15px; }
+        tr td:last-child { border-right: 1px solid #f1f5f9; border-radius: 0 15px 15px 0; }
+
+        .input-v { border: 1.5px solid #e2e8f0; padding: 8px; border-radius: 8px; width: 85px; font-weight: 600; text-align: center; }
+        .total-final { font-weight: 800; color: var(--aha-blue-main); font-size: 15px; }
+        .btn-action { padding: 15px 25px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 20px; }
+        .btn-pdf { background: var(--aha-purple); color: white; }
+        
+        /* Logout Link Style */
+        .logout-link { color: #ef4444; font-size: 12px; text-decoration: underline; cursor: pointer; font-weight: bold; display: inline-block; margin-top: 5px; }
+        .logout-link:hover { color: #b91c1c; }
+
+        /* PDF Template Hidden */
+        #pdf-template { display: none; width: 700px; padding: 40px; background: white; color: #333; font-family: 'Times New Roman', serif; }
+        .kop-surat { text-align: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <div class="viona-logo-login">VIONA</div>
+    <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">Payroll Intelligence System Access</p>
+    <input type="text" id="username" class="login-input" placeholder="Username" autofocus>
+    <input type="password" id="password" class="login-input" placeholder="Password">
+    <button class="btn-login" onclick="checkLogin()">MASUK</button>
+    <p id="error-msg" style="color: red; font-size: 12px; margin-top: 10px; display: none;"></p>
+</div>
+
+<div id="main-system">
+    <div class="viona-card">
+        <div class="header">
+            <div>
+                <h1 class="viona-logo-main">VIONA</h1>
+                <div style="color: #64748b; font-size: 18px; font-weight: 500;">Payroll Intelligence System</div>
+            </div>
+            <div class="admin-box">
+                <span style="font-size: 12px; color: #94a3b8; display: block;">Authorized User</span>
+                <strong id="display-name" style="color: var(--aha-blue-dark); font-size: 16px;">User</strong>
+                <div><span class="logout-link" onclick="handleLogout()">LOGOUT</span></div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Karyawan</th>
+                    <th>Gaji Pokok</th>
+                    <th>Hari Kerja</th>
+                    <th>Upah Harian</th>
+                    <th>Lembur(Jam)</th>
+                    <th>Bonus</th>
+                    <th>Potongan</th>
+                    <th>Total Gaji</th>
+                </tr>
+            </thead>
+            <tbody id="vionaTable">
+                <tr>
+                    <td><strong id="table-employee-name">Nama Karyawan</strong><br><small id="table-role">Staff</small></td>
+                    <td><input type="number" class="gapok input-v" value="560000"></td>
+                    <td><input type="number" class="hk input-v" value="24"></td>
+                    <td><input type="number" class="uh input-v" value="75000"></td>
+                    <td><input type="number" class="lembur input-v" value="0"></td>
+                    <td><input type="number" class="bonus input-v" value="480000"></td>
+                    <td><input type="number" class="pajak input-v" value="53968"></td>
+                    <td class="total-final">Rp -</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <button class="btn-action btn-pdf" onclick="generateOfficialPDF()">📄 DOWNLOAD SLIP GAJI (SURAT)</button>
+    </div>
+</div>
+
+<div id="pdf-template">
+    <div class="kop-surat"><h2>AHA MANAGEMENT SYSTEM</h2><p>Payroll Intelligence - VIONA</p></div>
+    <div style="text-align:center; font-weight:bold; text-decoration:underline; margin-bottom:20px;">SLIP GAJI KARYAWAN</div>
+    <table style="width:100%; margin-bottom:20px; font-size:14px;">
+        <tr><td>Nama</td><td>: <span id="pdf-name"></span></td><td>Tanggal</td><td>: <span id="pdf-date"></span></td></tr>
+        <tr><td>Jabatan</td><td>: <span id="pdf-role"></span></td><td>Status</td><td>: Aktif</td></tr>
+    </table>
+    <table style="width:100%; border-collapse:collapse; margin-bottom:20px; border:1px solid #000;">
+        <tr style="background:#eee;">
+            <th style="border:1px solid #000; padding:8px;">Deskripsi</th>
+            <th style="border:1px solid #000; padding:8px;">Jumlah</th>
+        </tr>
+        <tr><td style="border:1px solid #000; padding:8px;">Gaji Pokok</td><td style="border:1px solid #000; padding:8px;" id="p-gapok"></td></tr>
+        <tr><td style="border:1px solid #000; padding:8px;">Upah Harian</td><td style="border:1px solid #000; padding:8px;" id="p-harian"></td></tr>
+        <tr><td style="border:1px solid #000; padding:8px;">Lembur</td><td style="border:1px solid #000; padding:8px;" id="p-lembur"></td></tr>
+        <tr><td style="border:1px solid #000; padding:8px;">Bonus</td><td style="border:1px solid #000; padding:8px;" id="p-bonus"></td></tr>
+        <tr><td style="border:1px solid #000; padding:8px; color:red;">Potongan</td><td style="border:1px solid #000; padding:8px;" id="p-pajak"></td></tr>
+        <tr style="background:#eee; font-weight:bold;"><td style="border:1px solid #000; padding:8px;">TOTAL BERSIH</td><td style="border:1px solid #000; padding:8px;" id="p-total"></td></tr>
+    </table>
+    <div style="display:flex; justify-content:space-between; margin-top:40px; text-align:center;">
+        <div>Penerima,<br><br><br><br>( <span id="sign-name"></span> )</div>
+        <div>Admin Keuangan,<br><br><br><br>( VIONA System )</div>
+    </div>
+</div>
+
+<script>
+    const users = {
+        "qhisti": { fullName: "Manzilina Qhistina", role: "Manager" },
+        "regus": { fullName: "Regus", role: "Operational" },
+        "adin": { fullName: "Muliyadin", role: "Leader" },
+        "syakira": { fullName: "Syakira Naura Ramadhani", role: "Customer Service" }
+    };
+
+    function checkLogin() {
+        const u = document.getElementById('username').value.toLowerCase().trim();
+        const p = document.getElementById('password').value;
+        if (users[u] && p === 'viona123') {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-system').style.display = 'block';
+            document.body.style.alignItems = 'flex-start';
+            document.getElementById('display-name').innerText = users[u].fullName;
+            document.getElementById('table-employee-name').innerText = users[u].fullName;
+            document.getElementById('table-role').innerText = users[u].role;
+            vionaCalculate();
+        } else {
+            document.getElementById('error-msg').style.display = 'block';
+            document.getElementById('error-msg').innerText = "Username/Password Salah!";
+        }
+    }
+
+    // FUNGSI LOGOUT YANG SUDAH DIPERBAIKI
+    function handleLogout() {
+        // Balikkan tampilan
+        document.getElementById('main-system').style.display = 'none';
+        document.getElementById('login-screen').style.display = 'block';
+        document.body.style.alignItems = 'center';
+        
+        // Bersihkan data input
+        document.getElementById('username').value = "";
+        document.getElementById('password').value = "";
+        document.getElementById('error-msg').style.display = 'none';
+        
+        // Fokus lagi ke username
+        document.getElementById('username').focus();
+    }
+
+    function vionaCalculate() {
+        const row = document.querySelector("#vionaTable tr");
+        const gapok = parseFloat(row.querySelector(".gapok").value) || 0;
+        const hk = parseFloat(row.querySelector(".hk").value) || 0;
+        const uh = parseFloat(row.querySelector(".uh").value) || 0;
+        const jam = parseFloat(row.querySelector(".lembur").value) || 0;
+        const bonus = parseFloat(row.querySelector(".bonus").value) || 0;
+        const pajak = parseFloat(row.querySelector(".pajak").value) || 0;
+
+        const totalHarian = hk * uh;
+        const totalLembur = (jam * uh / 8) * 1.5;
+        const bersih = (gapok + totalHarian + totalLembur + bonus) - pajak;
+
+        row.querySelector(".total-final").innerText = "Rp " + Math.round(bersih).toLocaleString('id-ID');
+        window.payrollData = { gapok, totalHarian, totalLembur, bonus, pajak, bersih };
+    }
+
+    function generateOfficialPDF() {
+        const d = window.payrollData;
+        const n = document.getElementById('table-employee-name').innerText;
+        const r = document.getElementById('table-role').innerText;
+        const t = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+
+        document.getElementById('pdf-name').innerText = n;
+        document.getElementById('pdf-role').innerText = r;
+        document.getElementById('pdf-date').innerText = t;
+        document.getElementById('sign-name').innerText = n;
+        document.getElementById('p-gapok').innerText = "Rp " + d.gapok.toLocaleString('id-ID');
+        document.getElementById('p-harian').innerText = "Rp " + d.totalHarian.toLocaleString('id-ID');
+        document.getElementById('p-lembur').innerText = "Rp " + Math.round(d.totalLembur).toLocaleString('id-ID');
+        document.getElementById('p-bonus').innerText = "Rp " + d.bonus.toLocaleString('id-ID');
+        document.getElementById('p-pajak').innerText = "- Rp " + d.pajak.toLocaleString('id-ID');
+        document.getElementById('p-total').innerText = "Rp " + Math.round(d.bersih).toLocaleString('id-ID');
+
+        const el = document.getElementById('pdf-template');
+        el.style.display = 'block';
+        html2pdf().set({ margin: 0.5, filename: 'Slip_Gaji_'+n+'.pdf', jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } }).from(el).save().then(() => { el.style.display = 'none'; });
+    }
+
+    document.addEventListener('input', (e) => { if (e.target.classList.contains('input-v')) vionaCalculate(); });
+    document.addEventListener("keyup", (e) => { if (e.key === "Enter" && document.getElementById('login-screen').style.display !== 'none') checkLogin(); });
+</script>
+</body>
+</html>
